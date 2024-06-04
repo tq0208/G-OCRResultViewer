@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.34902.97
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "G-OCRResultViewer", "G-OCRResultViewer.pyproj", "{776BD493-D73B-4571-ACEA-0B6BC8315BE1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{776BD493-D73B-4571-ACEA-0B6BC8315BE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{776BD493-D73B-4571-ACEA-0B6BC8315BE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4FCDBBC2-C55A-49C8-B728-45223D2ADFBD}
+	EndGlobalSection
+EndGlobal
