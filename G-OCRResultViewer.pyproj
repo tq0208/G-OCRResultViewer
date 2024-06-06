@@ -21,6 +21,9 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="get_token.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="infer_tcocr.py" />
     <Compile Include="utility.py" />
     <Compile Include="__main__.py">
