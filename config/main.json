@@ -1,0 +1,8 @@
+{
+    "api":"",
+    "serviceId":[""],
+    "token":[""],
+    "imageDir" : "E:/TestOCR/0605/",
+    "images":["01.png","02.png","03.png"],
+    "outImgDir" : "E:/TestOCR/0605/out_put"
+}

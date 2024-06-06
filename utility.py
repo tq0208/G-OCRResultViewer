@@ -3,25 +3,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 import math
 import random
-
-class OCRPredictResult(object):
-    def __init__(self, text = '',score = -1.0, cls_label=-1, box=None):
-        self.text = text
-        self.score = score
-        self.cls_label = cls_label
-        if box is None:
-            self.box = []  # 初始化为空列表，可作为向量
-        else:
-            self.box = box  # 或者直接传入一个列表作为初始向量值
-    def addBoxPoint(self,min_x, min_y, max_x, max_y):
-        list = [min_x,min_y,max_x,max_y]
-        self.box.append(list)
-    
-    def setText(self, text):
-        self.text = text
-
-    def setScore(self, score):
-        self.score = score
+import base64
 
 def draw_ocr_box_txt(image,
                      boxes,
@@ -108,3 +90,12 @@ def create_font(txt, sz, font_path="./fonts/simfang.ttf"):
         font_size = int(font_size * sz[0] / length)
         font = ImageFont.truetype(font_path, font_size, encoding="utf-8")
     return font
+
+def image_to_base64(image_path):
+    with open(image_path, 'rb') as image_file:
+        img_data = image_file.read()
+        img_base64 = base64.b64encode(img_data).decode('utf-8')
+        # 将 Base64 字符串写入文件
+        with open('./base64_encoded_data.txt', 'w') as file:
+            file.write(img_base64)
+        return img_base64

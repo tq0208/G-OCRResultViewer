@@ -1,51 +1,44 @@
-#main.py
-import cv2
+import os
 import infer_tcocr
-import argparse 
-import utility as utl
-import numpy as np
+from PIL import Image
+import logging
+
+def gen_out_img_path(out_dir,file_path,service_id):
+     # 获取原始文件扩展名
+    extension = os.path.splitext(file_path)[1]
+    filename = os.path.basename(file_path)
+    filename = filename.split('.')[0]
+    #将service_id插入扩展名前，得到新的输出图片名称
+    new_file_name = f"{out_dir}/{filename}({service_id}){extension}"
+    
+    # 打印新的文件名
+    print(new_file_name)
+    return new_file_name
 
 def main():  
-#0、传入识别图片及结果集文本
-# 创建一个 ArgumentParser 对象  
-    parser = argparse.ArgumentParser(description='Process some integers.')  
-  
-    # 添加参数  
-    #parser.add_argument('--image', type=str, required=True, help='input image file')  
-    #parser.add_argument('--result', type=str, required=True, help='input result file') 
-    #parser.add_argument('--output', type=str, required=True, help='An output file')  
-  
-    # 解析参数  
-    #args = parser.parse_args()  
+    "通过配置文件，读取系统服务，与Tocken信息；识别的图片文件，输出识别结果等信息"
+    parsed_json = infer_tcocr.load_json('./config/main.json')
+    imageDir =  parsed_json['imageDir']
+    image_names = parsed_json['images'] 
+    outImgDir = parsed_json['outImgDir']
 
-    #1、添加图片，传入解析的图片，返回图片结果 
-    image_path = 'E:\工作\架构文档\\2024\产业园区业务\AI相关\AIRequest\自测结果\衬里管\衬里管-材料表1原图.png'   # 替换为你的图片路径  
-    image = infer_tcocr.load_image(image_path)
+    api_addrs = infer_tcocr.get_address_and_token(parsed_json)  #获得所有的服务和token
 
-    # 获取图像的尺寸（以像素为单位）  
-    width, height = image.width,image.height;  
-    print('Width (pixels):', width)  
-    print('Height (pixels):', height) 
+    image_paths = infer_tcocr.get_image_path(imageDir,image_names) #获取所有待识别的img
 
-    #2、解析OCR识别结果，返回文字及其box所在位置列表
-    json_path = 'E:\工作\架构文档\\2024\产业园区业务\AI相关\AIRequest\自测结果\衬里管\衬里管-材料表1_自建服务.json'
-    content = infer_tcocr.load_json_result(json_path)
+    logger = logging.getLogger(f'{outImgDir}/ocr_debug.log')
 
-    #3、解析JSON中的box和文本
-    data_list = content.get('data', [])
-    boxes ,scores ,txts = [],[],[]
-    for item in data_list:
-        box = item.get('box')
-        box = [tuple(iBox) for iBox in box]
-        boxes.append(box)  
-        confidence = item.get('confidence')
-        scores.append(confidence)
-        words = item.get('words')
-        txts.append(words)
-        print(f"Box: {box}, Confidence: {confidence}, Words: {words}")
+    for api_address,token in api_addrs.items():
+        for img_file in image_paths:
+            service_id = api_address.split('=')[1]
+            out_img_file = gen_out_img_path(outImgDir,img_file,service_id)
+            out_image = infer_tcocr.ocr_system(img_file,api_address,token,out_img_file)
+            if(out_image!=None and os.path.exists(out_image)):
+                image_result = Image.open(out_image)
+                #image_result.show()
+            else:
+                logger.error(f"serviceid = {service_id}    img = {img_file}  result_img not generate!")
 
-    draw_img = utl.draw_ocr_box_txt(image,boxes,txts,scores)
-    bsucess = cv2.imwrite('./img_result/image_infer.png', draw_img[:, :, ::-1])
 
 if __name__ == "__main__":  
     main()
