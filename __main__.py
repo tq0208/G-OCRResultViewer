@@ -9,7 +9,7 @@ def gen_out_img_path(out_dir,file_path,service_id):
     filename = os.path.basename(file_path)
     filename = filename.split('.')[0]
     #将service_id插入扩展名前，得到新的输出图片名称
-    new_file_name = f"{out_dir}/{filename}({service_id}){extension}"
+    new_file_name = f"{out_dir}/{filename}({service_id}_1){extension}"
     
     # 打印新的文件名
     print(new_file_name)
