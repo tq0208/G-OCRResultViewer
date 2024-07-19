@@ -53,7 +53,9 @@ def ocr_system(input_img_path,
     img_base64 = utl.image_to_base64(input_img_path)
     data_arr.append(img_base64)
     
-    request_data = {"image" : img_base64}
+    request_data = {"image" : img_base64,"options": {
+    "use_rotate": "false"
+  }}
     request_body = json.dumps(request_data)     # 将 request_data 转换为 JSON 字符串
     
     #api_address = url + "?serviceId="+service_id
