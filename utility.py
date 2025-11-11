@@ -9,7 +9,7 @@ def draw_ocr_box_txt(image,
                      boxes,
                      txts=None,
                      scores=None,
-                     drop_score=0.5,
+                     drop_score=0.0,
                      font_path="./fonts/simfang.ttf"):
     """
     draw ocr box and txt from predict
@@ -78,23 +78,49 @@ def draw_box_txt_fine(img_size, box, txt, font_path="./doc/fonts/simfang.ttf"):
         borderValue=(255, 255, 255))
     return img_right_text
 
+def to_excel(table_info, file_path, workbook=None):
+    import xlwt
+    if workbook is None:
+        workbook = xlwt.Workbook()
+    if len(table_info) == 0:
+        worksheet = workbook.add_sheet('table')
+        worksheet.write_merge(0, 0, 0, 0, "无数据")
+    else:
+        worksheet = workbook.add_sheet('page')
+        pageRow = 0
+        for text_dict in table_info:
+            cell = text_dict['cell']
+            row = cell['rowIdx']
+            col = cell['colIdx']
+            rowspan = cell['rowSpan']
+            colspan = cell['colSpan']
+
+            text = text_dict['words']
+            try:
+
+                worksheet.write_merge(row, row + rowspan - 1, col, col + colspan - 1, text)
+            except:
+                pass
+
+    workbook.save(file_path)
 
 def create_font(txt, sz, font_path="./fonts/simfang.ttf"):
     """
     create the font
     """
-    font_size = int(sz[1] * 0.99)
+    font_size = max(1, int(sz[1] * 0.99))
     font = ImageFont.truetype(font_path, font_size, encoding="utf-8")
     length = font.getlength(txt)
     if length > sz[0]:
         font_size = int(font_size * sz[0] / length)
         font = ImageFont.truetype(font_path, font_size, encoding="utf-8")
     return font
-
+ 
 def image_to_base64(image_path):
     with open(image_path, 'rb') as image_file:
         img_data = image_file.read()
         img_base64 = base64.b64encode(img_data).decode('utf-8')
+        #img_base64 = f"data:image/png;base64,{img_base64}"
         # 将 Base64 字符串写入文件
         with open('./base64_encoded_data.txt', 'w') as file:
             file.write(img_base64)

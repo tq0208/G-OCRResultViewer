@@ -7,7 +7,7 @@ def gen_out_img_path(out_dir,file_path,service_id):
      # 获取原始文件扩展名
     extension = os.path.splitext(file_path)[1]
     filename = os.path.basename(file_path)
-    filename = filename.split('.')[0]
+    filename = os.path.splitext(filename)[0]
     #将service_id插入扩展名前，得到新的输出图片名称
     new_file_name = f"{out_dir}/{filename}({service_id}_1){extension}"
     
@@ -23,9 +23,7 @@ def main():
     outImgDir = parsed_json['outImgDir']
 
     api_addrs = infer_tcocr.get_address_and_token(parsed_json)  #获得所有的服务和token
-
     image_paths = infer_tcocr.get_image_path(imageDir,image_names) #获取所有待识别的img
-
     logger = logging.getLogger(f'{outImgDir}/ocr_debug.log')
 
     for api_address,token in api_addrs.items():
@@ -38,7 +36,6 @@ def main():
                 #image_result.show()
             else:
                 logger.error(f"serviceid = {service_id}    img = {img_file}  result_img not generate!")
-
 
 if __name__ == "__main__":  
     main()

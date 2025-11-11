@@ -4,26 +4,30 @@ import cv2
 import json
 import requests
 import utility as utl
+import numpy as np
 from matplotlib.ticker import MultipleLocator  
   
 def is_image_file(filename):
+    for root, dirs, files in os.walk(filename):
+        for file in files:
+            print("检测到文件:", file)
     image_extensions = ['.png', '.jpg', '.jpeg', '.bmp']
     return any(filename.lower().endswith(ext) for ext in image_extensions)
 
-def get_image_path(dir,file_names):  
-    image_paths = []
-    if not file_names:
-        for root, dirs, files in os.walk(dir):
-            for file in files:
-                if is_image_file(file):
-                    img_path = os.path.join(root, file)
-                    image_paths.append(img_path)
-    else:
-        for file_name in file_names:
-            file_path = dir + file_name
-            if is_image_file(file_path):
-                image_paths.append(file_path)
-    return image_paths  
+def get_image_path(dir, file_names):  
+   image_paths = []  
+   if not file_names or len(file_names) == 0:  
+       for root, dirs, files in os.walk(dir):  
+           for file in files:  
+               if is_image_file(file):  
+                   img_path = os.path.join(root, file)  
+                   image_paths.append(img_path)  
+   else:  
+       for file_name in file_names:  
+           file_path = dir + file_name  
+           if is_image_file(file_path):  
+               image_paths.append(file_path)  
+   return image_paths
  
 
 def load_json(file_path):
@@ -31,6 +35,47 @@ def load_json(file_path):
     with open(file_path,'r',encoding="utf-8") as file:
         data = json.load(file)
         return data
+
+def process_layout_items(content):
+    if('data' in content):
+        data_list = content.get("data", {}).get("output", {}).get("pages", [])
+        text_list = data_list
+    if('layout' in data_list):
+        text_list = data_list.get('layout',[])
+    if( not text_list):
+        print("API调用失败，错误信息：", content.text)
+        return
+    
+    boxes, scores, txts = [], [], []
+    
+    for item in text_list:
+        items = item.get('layout', [])
+        for layout_item in items:
+            box = layout_item.get('bbox')
+            box = [tuple(iBox) for iBox in box]
+            boxes.append(box)  
+            confidence = layout_item.get('score')
+            scores.append(confidence)
+            words = layout_item.get('content')
+            txts.append(words)
+            #print(f"Box: {box}, Confidence: {confidence}, Words: {words}")
+    
+    return boxes, scores, txts
+
+def process_data_items(content):
+    data_list = content.get("data", [])
+    text_list = data_list
+    boxes, scores, txts = [], [], []
+    for item in text_list:
+        box = item.get('box')
+        box = [tuple(iBox) for iBox in box]
+        boxes.append(box)  
+        confidence = item.get('confidence')
+        scores.append(confidence)
+        words = item.get('words')
+        txts.append(words)
+        #print(f"Box: {box}, Confidence: {confidence}, Words: {words}")
+    return boxes, scores, txts
 
 def ocr_system(input_img_path,
                api_address,
@@ -53,10 +98,10 @@ def ocr_system(input_img_path,
     img_base64 = utl.image_to_base64(input_img_path)
     data_arr.append(img_base64)
     
-    request_data = {"image" : img_base64,"options": {
-    "use_rotate": "false"
-  }}
-    request_body = json.dumps(request_data)     # 将 request_data 转换为 JSON 字符串
+    request_data = {"image" : img_base64,"options": {"use_rotate": "false"}}
+    #request_data = {"pages" : [{"image" : img_base64}]}
+    request_body   = json.dumps(request_data)     # 将 request_data 转换为 JSON 字符串
+    print(request_body)
     
     #api_address = url + "?serviceId="+service_id
 
@@ -64,7 +109,7 @@ def ocr_system(input_img_path,
     timeout = 10
     # 发送请求
     response = requests.post(api_address, headers=headers, json=request_data, timeout=timeout)
-
+    content =''
     if response.status_code == 200:    # 检查响应状态码
         content = response.json()
         print("API调用成功，响应数据：", json.dumps(content, indent=4))
@@ -74,32 +119,24 @@ def ocr_system(input_img_path,
         return
 
     #3、解析JSON中的box和文本
-    if('data' in content):
-        data_list = content.get('data', [])
-        text_list = data_list
-    if('text' in data_list):
-        text_list = data_list.get('text')
-    if( not text_list):
-        print("API调用失败，错误信息：", response.text)
-        return
-    boxes ,scores ,txts = [],[],[]
-
-    for item in text_list:
-        box = item.get('box')
-        box = [tuple(iBox) for iBox in box]
-        boxes.append(box)  
-        confidence = item.get('confidence')
-        scores.append(confidence)
-        words = item.get('words')
-        txts.append(words)
-        #print(f"Box: {box}, Confidence: {confidence}, Words: {words}")
+    #boxes, scores, txts = process_layout_items(content)
+    boxes, scores, txts = process_data_items(content)
 
     image = Image.open(input_img_path)
     draw_img = utl.draw_ocr_box_txt(image,boxes,txts,scores)
+    #to_excel()
 
     if(not out_img_path):
         out_img_path = './img_result/image_infer.png'
-    bsucess = cv2.imwrite(out_img_path, draw_img[:, :, ::-1])
+    
+    # 使用cv2.imencode支持中文路径
+    success, encoded_img = cv2.imencode('.png', draw_img[:, :, ::-1])
+    if success:
+        with open(out_img_path, 'wb') as f:
+            f.write(encoded_img.tobytes())
+        bsucess = True
+    else:
+        bsucess = False
 
     return out_img_path
 
