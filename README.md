@@ -11,3 +11,8 @@ Glodon tc-ocr result viewer
 #### 2、结合ocr识别返回的json结果，转换后效果如下：
 
 ![1111](https://github.com/tq0208/G-OCRResultViewer/assets/26135213/a0a6c150-43ce-4772-88d8-7058a654cb27)
+
+
+
+11.11 更新：
+新增GOCR-WorkFlowVisualizeResult.py 支持解析Glodon工作流OCR格式结果，并返回可视化结果。
